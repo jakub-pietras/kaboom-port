@@ -1,0 +1,21 @@
+{
+  "name": "kaboom-port",
+  "version": "1.0.0",
+  "description": "Atari \"Kaboom!\" game port for web browser ",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {},
+  "author": "Jakub Pietras <jakub.pietras@outlook.com>",
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/jakub-pietras/kaboom-port#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakub-pietras/kaboom-port.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jakub-pietras/kaboom-port/issues"
+  },
+  "dependencies": {
+    "phaser": "^3.16.2"
+  }
+}
