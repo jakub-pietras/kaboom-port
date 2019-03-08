@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "lib": [
+      "dom",
+      "es2015"
+    ],
     "moduleResolution": "node",
     "noImplicitAny": true,
     "paths": {
@@ -11,5 +15,8 @@
   "files": [
     "src/index.ts",
     "node_modules/phaser3-docs/typescript/phaser.d.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
   ]
 }

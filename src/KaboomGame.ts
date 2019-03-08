@@ -1,35 +1,28 @@
 import * as Phaser from 'phaser';
 
-export class KaboomGame {
-  game: Phaser.Game;
+import {GameScene} from '@app/scenes/GameScene';
 
+export class KaboomGame {
   constructor() {
-    this.game = new Phaser.Game({
+    new Phaser.Game({
       backgroundColor: '#95a5a6',
       fps: {
         min: 60,
         target: 100,
       },
-      height: 800,
+      height: 1000,
       input: {
         touch: false,
       },
       parent: 'game-root-node',
-      scene: {
-        create: this.create,
-        preload: this.preload,
-        update: this.update,
+      physics: {
+        default: 'arcade',
       },
+      scene: [GameScene],
       title: 'Kaboom!',
       type: Phaser.AUTO,
       version: '1.0.0',
-      width: 1200,
+      width: 1000,
     });
   }
-
-  create = () => {};
-
-  preload = () => {};
-
-  update = () => {};
 }
