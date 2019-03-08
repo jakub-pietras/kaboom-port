@@ -22,14 +22,16 @@ export class Prisoner implements IGameObject {
   }
 
   private get shouldChangeDirection(): boolean {
+    if (this.sprite.body.blocked.left || this.sprite.body.blocked.right) {
+      return true;
+    }
+
     const timeSinceLastChange = this.scene.time.now - this.lastDirectionChange;
 
     if (timeSinceLastChange > this.MAX_DIRECTION_CHANGE_TIME) {
       return true;
     } else if (timeSinceLastChange > this.MIN_DIRECTION_CHANGE_TIME) {
-      const shouldChangeRandomly = Math.random() <= this.BASE_DIRECTION_CHANGE_CHANCE * this.speedLevel;
-
-      return shouldChangeRandomly || this.sprite.body.blocked.left || this.sprite.body.blocked.right;
+      return Math.random() <= this.BASE_DIRECTION_CHANGE_CHANCE * this.speedLevel;
     }
 
     return false;
