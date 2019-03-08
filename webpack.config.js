@@ -32,6 +32,10 @@ const config = {
           },
         ],
       },
+      {
+        test: /\.svg$/,
+        loader: 'file-loader',
+      },
     ],
   },
   plugins: [
