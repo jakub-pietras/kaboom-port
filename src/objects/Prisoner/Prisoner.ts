@@ -12,7 +12,6 @@ export class Prisoner implements IGameObject {
 
   private directionModifier = Math.random() > 0.5 ? 1 : -1;
   private lastDirectionChange: number;
-  private position: { x: number; y: number; };
   private scene: Phaser.Scene;
   public speedLevel = MIN_SPEED_LEVEL;
   public sprite: Phaser.Physics.Arcade.Sprite;
@@ -39,9 +38,8 @@ export class Prisoner implements IGameObject {
 
   public create(initialX: number, initialY: number): void {
     this.lastDirectionChange = this.scene.time.now;
-    this.position = {x: initialX, y: initialY};
 
-    this.sprite = this.scene.physics.add.sprite(this.position.x, this.position.y, this.SPRITE_KEY);
+    this.sprite = this.scene.physics.add.sprite(initialX, initialY, this.SPRITE_KEY);
 
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setOrigin(0.5, 0.9);
@@ -54,7 +52,7 @@ export class Prisoner implements IGameObject {
   }
   
   public preload(): void {
-    this.scene.load.svg(this.SPRITE_KEY, prisonerSprite, {width: 63, height: 135});
+    this.scene.load.svg(this.SPRITE_KEY, prisonerSprite, {scale: 5});
   }
 
   public riseSpeedLevel(): void {
@@ -70,6 +68,6 @@ export class Prisoner implements IGameObject {
     }
 
     const speed = speedLevelsMap.get(this.speedLevel);
-    this.sprite.setVelocity(speed * this.directionModifier, 0);
+    this.sprite.setVelocityX(speed * this.directionModifier);
   }
 }

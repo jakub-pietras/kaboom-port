@@ -12,6 +12,9 @@ export class KaboomGame {
       },
       height: 1000,
       input: {
+        gamepad: false,
+        keyboard: true,
+        mouse: false,
         touch: false,
       },
       parent: 'game-root-node',
