@@ -1,10 +1,12 @@
 import * as Phaser from 'phaser';
 
 import {IGameObject} from '@app/objects/IGameObject';
+import {Player} from '@app/objects/Player';
 import {Prisoner} from '@app/objects/Prisoner';
 
 export class GameScene extends Phaser.Scene {
   private gameObjects: Array<IGameObject> = [];
+  private player: Player;
   private prisoner: Prisoner;
 
   constructor() {
@@ -12,12 +14,19 @@ export class GameScene extends Phaser.Scene {
 
     this.prisoner = new Prisoner(this);
     this.gameObjects.push(this.prisoner);
+
+    this.player = new Player(this);
+    this.gameObjects.push(this.player);
   }
 
   public create(): void {
-    this.physics.world.setBounds(0, 0, this.game.scale.width, this.game.scale.height);
+    const worldHeight = this.game.scale.height;
+    const worldWidth = this.game.scale.width;
 
-    this.prisoner.create(this.game.scale.width * 0.8, this.game.scale.height * 0.2);
+    this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
+
+    this.prisoner.create(worldWidth * 0.8, worldHeight * 0.2);
+    this.player.create(worldWidth * 0.5, worldHeight * 0.95);
   }
 
   public preload(): void {
@@ -26,5 +35,6 @@ export class GameScene extends Phaser.Scene {
 
   public update(): void {
     this.prisoner.update();
+    this.player.update();
   }
 }
