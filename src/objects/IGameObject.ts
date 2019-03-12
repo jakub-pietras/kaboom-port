@@ -1,5 +1,5 @@
 export interface IGameObject {
   create(initialX: number, initialY: number): void;
-  preload(): void;
+  destroy(): void;
   update(): void;
 }

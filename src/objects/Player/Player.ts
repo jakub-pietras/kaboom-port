@@ -4,12 +4,12 @@ import * as playerSprite from './playerSprite.svg';
 import {IGameObject} from '../IGameObject';
 
 export class Player implements IGameObject {
-  private readonly BASE_SPEED = 1200;
-  private readonly MAX_LIVES = 3;
-  private readonly SPRITE_KEY = 'player';
+  private static readonly BASE_SPEED = 1500;
+  private static readonly MAX_LIVES = 3;
+  private static readonly SPRITE_KEY = 'player';
 
   private aKey: Phaser.Input.Keyboard.Key;
-  private currentLives = this.MAX_LIVES;
+  private currentLives = Player.MAX_LIVES;
   private dKey: Phaser.Input.Keyboard.Key;
   private leftKey: Phaser.Input.Keyboard.Key;
   private paddleSprites: {
@@ -29,11 +29,17 @@ export class Player implements IGameObject {
     return this.currentLives > 0;
   }
 
+  public addLife(): void {
+    if (this.currentLives < Player.MAX_LIVES) {
+      this.setLives(this.currentLives + 1);
+    }
+  }
+
   public create(initialX: number, initialY: number): void {
     this.paddleSprites = {
-      bottom: this.scene.physics.add.sprite(initialX, initialY, this.SPRITE_KEY),
-      middle: this.scene.physics.add.sprite(initialX, initialY - 90, this.SPRITE_KEY),
-      top: this.scene.physics.add.sprite(initialX, initialY - 180, this.SPRITE_KEY),
+      bottom: this.scene.physics.add.sprite(initialX, initialY, Player.SPRITE_KEY),
+      middle: this.scene.physics.add.sprite(initialX, initialY - 90, Player.SPRITE_KEY),
+      top: this.scene.physics.add.sprite(initialX, initialY - 180, Player.SPRITE_KEY),
     };
 
     this.spriteGroup = this.scene.physics.add.group([
@@ -51,9 +57,13 @@ export class Player implements IGameObject {
     this.leftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
     this.rightKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
   }
+
+  public destroy(): void {
+    this.spriteGroup.destroy(true);
+  }
   
-  public preload(): void {
-    this.scene.load.svg(this.SPRITE_KEY, playerSprite, {scale: 5});
+  public static preload(scene: Phaser.Scene): void {
+    scene.load.svg(Player.SPRITE_KEY, playerSprite, {scale: 5});
   }
 
   public removeLife(): void {
@@ -61,33 +71,33 @@ export class Player implements IGameObject {
   }
 
   public resetLives(): void {
-    this.setLives(this.MAX_LIVES);
+    this.setLives(Player.MAX_LIVES);
   }
 
   private setLives(newAmount: number) {
     this.currentLives = newAmount;
 
     if (this.currentLives >= 1) {
-      this.paddleSprites.top.body.checkCollision.none = true;
+      this.paddleSprites.top.enableBody(false, null, null, true, true);
       this.paddleSprites.top.setVisible(true);
     } else {
-      this.paddleSprites.top.body.checkCollision.none = false;
+      this.paddleSprites.top.disableBody();
       this.paddleSprites.top.setVisible(false);
     }
 
     if (this.currentLives >= 2) {
-      this.paddleSprites.middle.body.checkCollision.none = true;
+      this.paddleSprites.middle.enableBody(false, null, null, true, true);
       this.paddleSprites.middle.setVisible(true);
     } else {
-      this.paddleSprites.middle.body.checkCollision.none = false;
+      this.paddleSprites.middle.disableBody();
       this.paddleSprites.middle.setVisible(false);
     }
 
     if (this.currentLives >= 3) {
-      this.paddleSprites.bottom.body.checkCollision.none = true;
+      this.paddleSprites.bottom.enableBody(false, null, null, true, true);
       this.paddleSprites.bottom.setVisible(true);
     } else {
-      this.paddleSprites.bottom.body.checkCollision.none = false;
+      this.paddleSprites.bottom.disableBody();
       this.paddleSprites.bottom.setVisible(false);
     }
   }
@@ -96,11 +106,11 @@ export class Player implements IGameObject {
     let speed = 0;
 
     if (this.aKey.isDown || this.leftKey.isDown) {
-      speed -= this.BASE_SPEED;
+      speed -= Player.BASE_SPEED;
     }
 
     if (this.dKey.isDown || this.rightKey.isDown) {
-      speed += this.BASE_SPEED;
+      speed += Player.BASE_SPEED;
     }
 
     this.spriteGroup.setVelocityX(speed);
