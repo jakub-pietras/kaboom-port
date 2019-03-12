@@ -42,4 +42,8 @@ export class LevelController {
       this.level++;
     }
   }
+
+  public resetDroppedBombs(): void {
+    this.bombsDropped = this.bombsCatched;
+  }
 }

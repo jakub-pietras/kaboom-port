@@ -18,6 +18,7 @@ export class GameScene extends Phaser.Scene {
   private pauseTimer: Phaser.Time.TimerEvent;
   private player: Player;
   private prisoner: Prisoner;
+  private scoreText: Phaser.GameObjects.Text;
 
   constructor() {
     super(GameScene.SCENE_KEY);
@@ -40,6 +41,8 @@ export class GameScene extends Phaser.Scene {
     this.prisoner.create(worldWidth * 0.8, worldHeight * 0.2);
     this.player.create(worldWidth * 0.5, worldHeight * 0.95);
 
+    this.scoreText = this.add.text(worldWidth * 0.5, worldHeight * 0.01, '0', {fontSize: 36});
+
     this.dropTimer = this.time.addEvent({
       callback: this.dropBomb,
       callbackScope: this,
@@ -57,6 +60,7 @@ export class GameScene extends Phaser.Scene {
 
   private dropBomb(): void {
     if (!this.levelController.shouldDropBomb) {
+      this.pausePrisoner();
       return;
     }
 
@@ -71,9 +75,25 @@ export class GameScene extends Phaser.Scene {
       this,
     );
 
-    newBomb.playerCollider = this.physics.add.overlap(
+    newBomb.playerBottomPaddleCollider = this.physics.add.overlap(
       newBomb.sprite,
-      this.player.spriteGroup,
+      this.player.paddleSprites.bottom,
+      this.handleBombPlayerOverlap,
+      null,
+      this,
+    );
+
+    newBomb.playerMiddlePaddleCollider = this.physics.add.overlap(
+      newBomb.sprite,
+      this.player.paddleSprites.middle,
+      this.handleBombPlayerOverlap,
+      null,
+      this,
+    );
+
+    newBomb.playerTopPaddleCollider = this.physics.add.overlap(
+      newBomb.sprite,
+      this.player.paddleSprites.top,
       this.handleBombPlayerOverlap,
       null,
       this,
@@ -88,16 +108,22 @@ export class GameScene extends Phaser.Scene {
 
     this.pausePrisoner();
     this.player.removeLife();
+    this.levelController.resetDroppedBombs();
 
     if (!this.player.isAlive) {
       this.pauseTimer.destroy();
     }
   }
 
-  private handleBombPlayerOverlap(bombSprite: Phaser.Physics.Arcade.Sprite): void {
+  private handleBombPlayerOverlap(
+    bombSprite: Phaser.Physics.Arcade.Sprite,
+    playerPaddle: Phaser.Physics.Arcade.Sprite,
+  ): void {
     this.destroyBomb(bombSprite);
 
+    this.player.animateSplash(playerPaddle);
     this.levelController.addBombCatched();
+    this.scoreText.setText(this.levelController.currentScore.toString());
 
     if (this.prisoner.speedLevel < this.levelController.currentLevel) {
       this.prisoner.riseSpeedLevel();
@@ -107,6 +133,10 @@ export class GameScene extends Phaser.Scene {
   public pausePrisoner(): void {
     this.dropTimer.paused = true;
     this.prisoner.stopMovement();
+
+    if (this.pauseTimer) {
+      this.pauseTimer.destroy();
+    }
 
     this.pauseTimer = this.time.addEvent({
       callback: this.unpausePrisoner,
