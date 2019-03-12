@@ -1,22 +1,30 @@
 import * as Phaser from 'phaser';
 
-import {IGameObject} from '@app/objects/IGameObject';
+import {Bomb} from '@app/objects/Bomb';
 import {Player} from '@app/objects/Player';
 import {Prisoner} from '@app/objects/Prisoner';
 
+import {LevelController} from './LevelController';
+
 export class GameScene extends Phaser.Scene {
-  private gameObjects: Array<IGameObject> = [];
+  private static readonly BOMB_DROP_DELAY = 250;
+  private static readonly GAME_PAUSE_DELAY = 2000;
+  private static readonly SCENE_KEY = 'GameScene';
+
+  private bombBoundary: Phaser.Physics.Arcade.Sprite;
+  private bombs: Array<Bomb> = [];
+  private dropTimer: Phaser.Time.TimerEvent;
+  private levelController = new LevelController();
+  private pauseTimer: Phaser.Time.TimerEvent;
   private player: Player;
   private prisoner: Prisoner;
+  private scoreText: Phaser.GameObjects.Text;
 
   constructor() {
-    super('GameScene');
-
-    this.prisoner = new Prisoner(this);
-    this.gameObjects.push(this.prisoner);
+    super(GameScene.SCENE_KEY);
 
     this.player = new Player(this);
-    this.gameObjects.push(this.player);
+    this.prisoner = new Prisoner(this);
   }
 
   public create(): void {
@@ -25,12 +33,128 @@ export class GameScene extends Phaser.Scene {
 
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
 
+    this.bombBoundary = this.physics.add.sprite(worldWidth / 2, worldHeight, null);
+    this.bombBoundary.setOrigin(0.5, 1);
+    this.bombBoundary.body.setSize(worldWidth, 1);
+    this.bombBoundary.setAlpha(0);
+
     this.prisoner.create(worldWidth * 0.8, worldHeight * 0.2);
     this.player.create(worldWidth * 0.5, worldHeight * 0.95);
+
+    this.scoreText = this.add.text(worldWidth * 0.5, worldHeight * 0.01, '0', {fontSize: 36});
+
+    this.dropTimer = this.time.addEvent({
+      callback: this.dropBomb,
+      callbackScope: this,
+      delay: GameScene.BOMB_DROP_DELAY,
+      loop: true,
+    });
+  }
+
+  private destroyBomb(bombSprite: Phaser.Physics.Arcade.Sprite): void {
+    const targetBomb = this.bombs.find(bomb => bomb.sprite === bombSprite);
+    targetBomb.destroy();
+
+    this.bombs = this.bombs.filter(bomb => bomb.sprite !== bombSprite);
+  }
+
+  private dropBomb(): void {
+    if (!this.levelController.shouldDropBomb) {
+      this.pausePrisoner();
+      return;
+    }
+
+    const newBomb = new Bomb(this);
+    newBomb.create(this.prisoner.sprite.x, this.prisoner.sprite.y);
+
+    newBomb.boundaryCollider = this.physics.add.overlap(
+      newBomb.sprite,
+      this.bombBoundary,
+      this.handleBombBoundaryOverlap,
+      null,
+      this,
+    );
+
+    newBomb.playerBottomPaddleCollider = this.physics.add.overlap(
+      newBomb.sprite,
+      this.player.paddleSprites.bottom,
+      this.handleBombPlayerOverlap,
+      null,
+      this,
+    );
+
+    newBomb.playerMiddlePaddleCollider = this.physics.add.overlap(
+      newBomb.sprite,
+      this.player.paddleSprites.middle,
+      this.handleBombPlayerOverlap,
+      null,
+      this,
+    );
+
+    newBomb.playerTopPaddleCollider = this.physics.add.overlap(
+      newBomb.sprite,
+      this.player.paddleSprites.top,
+      this.handleBombPlayerOverlap,
+      null,
+      this,
+    );
+
+    this.bombs.push(newBomb);
+    this.levelController.addBombDropped();
+  }
+
+  private handleBombBoundaryOverlap(): void {
+    this.bombs.forEach(bomb => this.destroyBomb(bomb.sprite));
+
+    this.pausePrisoner();
+    this.player.removeLife();
+    this.levelController.resetDroppedBombs();
+
+    if (!this.player.isAlive) {
+      this.pauseTimer.destroy();
+    }
+  }
+
+  private handleBombPlayerOverlap(
+    bombSprite: Phaser.Physics.Arcade.Sprite,
+    playerPaddle: Phaser.Physics.Arcade.Sprite,
+  ): void {
+    this.destroyBomb(bombSprite);
+
+    this.player.animateSplash(playerPaddle);
+    this.levelController.addBombCatched();
+    this.scoreText.setText(this.levelController.currentScore.toString());
+
+    if (this.prisoner.speedLevel < this.levelController.currentLevel) {
+      this.prisoner.riseSpeedLevel();
+    }
+  }
+
+  public pausePrisoner(): void {
+    this.dropTimer.paused = true;
+    this.prisoner.stopMovement();
+
+    if (this.pauseTimer) {
+      this.pauseTimer.destroy();
+    }
+
+    this.pauseTimer = this.time.addEvent({
+      callback: this.unpausePrisoner,
+      callbackScope: this,
+      delay: GameScene.GAME_PAUSE_DELAY,
+    });
   }
 
   public preload(): void {
-    this.gameObjects.forEach(gameObject => gameObject.preload());
+    Bomb.preload(this);
+    Player.preload(this);
+    Prisoner.preload(this);
+  }
+
+  private unpausePrisoner(): void {
+    this.pauseTimer.destroy();
+    this.prisoner.startMovement();
+    this.dropTimer.paused = false;
   }
 
   public update(): void {

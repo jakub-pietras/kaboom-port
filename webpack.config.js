@@ -33,7 +33,7 @@ const config = {
         ],
       },
       {
-        test: /\.svg$/,
+        test: /\.(svg|wav)$/,
         loader: 'file-loader',
       },
     ],

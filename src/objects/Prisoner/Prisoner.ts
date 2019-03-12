@@ -5,11 +5,12 @@ import {IGameObject} from '../IGameObject';
 import {MAX_SPEED_LEVEL, MIN_SPEED_LEVEL, speedLevelsMap} from './speedLevelsMap';
 
 export class Prisoner implements IGameObject {
-  private readonly BASE_DIRECTION_CHANGE_CHANCE = 0.005;
-  private readonly MAX_DIRECTION_CHANGE_TIME = 3000;
-  private readonly MIN_DIRECTION_CHANGE_TIME = 150;
-  private readonly SPRITE_KEY = 'prisoner';
+  private static readonly BASE_DIRECTION_CHANGE_CHANCE = 0.005;
+  private static readonly MAX_DIRECTION_CHANGE_TIME = 3000;
+  private static readonly MIN_DIRECTION_CHANGE_TIME = 150;
+  private static readonly SPRITE_KEY = 'prisoner';
 
+  private blockMovement = false;
   private directionModifier = Math.random() > 0.5 ? 1 : -1;
   private lastDirectionChange: number;
   private scene: Phaser.Scene;
@@ -27,10 +28,10 @@ export class Prisoner implements IGameObject {
 
     const timeSinceLastChange = this.scene.time.now - this.lastDirectionChange;
 
-    if (timeSinceLastChange > this.MAX_DIRECTION_CHANGE_TIME) {
+    if (timeSinceLastChange > Prisoner.MAX_DIRECTION_CHANGE_TIME) {
       return true;
-    } else if (timeSinceLastChange > this.MIN_DIRECTION_CHANGE_TIME) {
-      return Math.random() <= this.BASE_DIRECTION_CHANGE_CHANCE * this.speedLevel;
+    } else if (timeSinceLastChange > Prisoner.MIN_DIRECTION_CHANGE_TIME) {
+      return Math.random() <= Prisoner.BASE_DIRECTION_CHANGE_CHANCE * this.speedLevel;
     }
 
     return false;
@@ -39,10 +40,14 @@ export class Prisoner implements IGameObject {
   public create(initialX: number, initialY: number): void {
     this.lastDirectionChange = this.scene.time.now;
 
-    this.sprite = this.scene.physics.add.sprite(initialX, initialY, this.SPRITE_KEY);
+    this.sprite = this.scene.physics.add.sprite(initialX, initialY, Prisoner.SPRITE_KEY);
 
     this.sprite.setCollideWorldBounds(true);
     this.sprite.setOrigin(0.5, 0.9);
+  }
+
+  public destroy(): void {
+    this.sprite.destroy();
   }
 
   public lowerSpeedLevel(): void {
@@ -51,8 +56,8 @@ export class Prisoner implements IGameObject {
     }
   }
   
-  public preload(): void {
-    this.scene.load.svg(this.SPRITE_KEY, prisonerSprite, {scale: 5});
+  public static preload(scene: Phaser.Scene): void {
+    scene.load.svg(Prisoner.SPRITE_KEY, prisonerSprite, {scale: 5});
   }
 
   public riseSpeedLevel(): void {
@@ -61,7 +66,20 @@ export class Prisoner implements IGameObject {
     }
   }
 
+  public startMovement(): void {
+    this.blockMovement = false;
+  }
+
+  public stopMovement(): void {
+    this.blockMovement = true;
+  }
+
   public update(): void {
+    if (this.blockMovement) {
+      this.sprite.setVelocityX(0);
+      return;
+    }
+
     if (this.shouldChangeDirection) {
       this.directionModifier *= -1;
       this.lastDirectionChange = this.scene.time.now;
