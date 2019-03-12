@@ -11,6 +11,7 @@ export class GameScene extends Phaser.Scene {
   private static readonly GAME_PAUSE_DELAY = 2000;
   private static readonly SCENE_KEY = 'GameScene';
 
+  private background: Phaser.GameObjects.Graphics;
   private bombBoundary: Phaser.Physics.Arcade.Sprite;
   private bombs: Array<Bomb> = [];
   private dropTimer: Phaser.Time.TimerEvent;
@@ -37,6 +38,10 @@ export class GameScene extends Phaser.Scene {
     this.bombBoundary.setOrigin(0.5, 1);
     this.bombBoundary.body.setSize(worldWidth, 1);
     this.bombBoundary.setAlpha(0);
+
+    this.background = this.add.graphics();
+    this.background.fillStyle(0x527e2d);
+    this.background.fillRect(0, worldHeight * 0.2, worldWidth, worldHeight * 0.8);
 
     this.prisoner.create(worldWidth * 0.8, worldHeight * 0.2);
     this.player.create(worldWidth * 0.5, worldHeight * 0.95);
