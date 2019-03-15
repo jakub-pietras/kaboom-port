@@ -4,6 +4,8 @@ import {Bomb} from '@app/objects/Bomb';
 import {Player} from '@app/objects/Player';
 import {Prisoner} from '@app/objects/Prisoner';
 
+import * as bombCatch from './sfx/bombCatch.wav';
+import * as bombFuse from './sfx/bombFuse.wav';
 import {LevelController} from './LevelController';
 
 export class GameScene extends Phaser.Scene {
@@ -15,6 +17,7 @@ export class GameScene extends Phaser.Scene {
   private bombBoundary: Phaser.Physics.Arcade.Sprite;
   private bombs: Array<Bomb> = [];
   private dropTimer: Phaser.Time.TimerEvent;
+  private fuseSound: Phaser.Sound.BaseSound;
   private levelController = new LevelController();
   private pauseTimer: Phaser.Time.TimerEvent;
   private player: Player;
@@ -33,6 +36,7 @@ export class GameScene extends Phaser.Scene {
     const worldWidth = this.game.scale.width;
 
     this.physics.world.setBounds(0, 0, worldWidth, worldHeight);
+    this.fuseSound = this.sound.add('bombFuse');
 
     this.bombBoundary = this.physics.add.sprite(worldWidth / 2, worldHeight, null);
     this.bombBoundary.setOrigin(0.5, 1);
@@ -46,7 +50,10 @@ export class GameScene extends Phaser.Scene {
     this.prisoner.create(worldWidth * 0.8, worldHeight * 0.2);
     this.player.create(worldWidth * 0.5, worldHeight * 0.95);
 
-    this.scoreText = this.add.text(worldWidth * 0.5, worldHeight * 0.01, '0', {fontSize: 36});
+    this.scoreText = this.add.text(worldWidth * 0.5, worldHeight * 0.01, '0', {
+      color: '#ced059',
+      fontSize: 42,
+    });
 
     this.dropTimer = this.time.addEvent({
       callback: this.dropBomb,
@@ -126,9 +133,18 @@ export class GameScene extends Phaser.Scene {
   ): void {
     this.destroyBomb(bombSprite);
 
+    const previousScoreThousands = Math.floor(this.levelController.currentScore / 1000);
+
+    this.sound.play('bombCatch');
     this.player.animateSplash(playerPaddle);
     this.levelController.addBombCatched();
     this.scoreText.setText(this.levelController.currentScore.toString());
+
+    const currentScoreThousands = Math.floor(this.levelController.currentScore / 1000);
+
+    if (currentScoreThousands > previousScoreThousands) {
+      this.player.addLife();
+    }
 
     if (this.prisoner.speedLevel < this.levelController.currentLevel) {
       this.prisoner.riseSpeedLevel();
@@ -151,6 +167,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   public preload(): void {
+    this.load.audio('bombCatch', bombCatch);
+    this.load.audio('bombFuse', bombFuse);
+
     Bomb.preload(this);
     Player.preload(this);
     Prisoner.preload(this);
@@ -163,6 +182,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   public update(): void {
+    if (this.bombs.length > 0) {
+      if (!this.fuseSound.isPlaying) {
+        this.fuseSound.play();
+      }
+    } else if (this.fuseSound.isPlaying) {
+      this.fuseSound.stop();
+    }
+
     this.prisoner.update();
     this.player.update();
   }

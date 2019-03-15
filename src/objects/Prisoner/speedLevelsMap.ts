@@ -4,9 +4,9 @@ export const speedLevelsMap: Map<number, number> = new Map([
   [3, 900],
   [4, 1100],
   [5, 1300],
-  [6, 1600],
-  [7, 2100],
-  [8, 2800],
+  [6, 1500],
+  [7, 1700],
+  [8, 2000],
 ]);
 
 const speedLevels = Array.from(speedLevelsMap.keys());

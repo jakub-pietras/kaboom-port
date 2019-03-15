@@ -25,7 +25,7 @@ export class KaboomGame {
       title: 'Kaboom!',
       type: Phaser.AUTO,
       version: '1.0.0',
-      width: 1000,
+      width: 1200,
     });
   }
 }

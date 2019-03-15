@@ -4,7 +4,7 @@ import * as playerSpriteSheet from './playerSpriteSheet.svg';
 import {IGameObject} from '../IGameObject';
 
 export class Player implements IGameObject {
-  private static readonly BASE_SPEED = 1500;
+  private static readonly BASE_SPEED = 1800;
   private static readonly MAX_LIVES = 3;
   private static readonly SPLASH_ANIMATION_KEY = 'splash';
   private static readonly SPLASH_ANIMATION_FRAME_RATE = 10;
